@@ -82,18 +82,20 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
-    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_expires = timedelta(days=7)  
     refresh_token = create_refresh_token(data={"sub": user.username}, expires_delta=refresh_token_expires)
     
-    logger.info(f"Generated access token: {access_token}")
-    logger.info(f"Generated refresh token: {refresh_token}")
-    
-    return JSONResponse(content={
+    response = JSONResponse(content={
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
         "user_id": user.id
     })
+    
+    response.set_cookie("access_token", access_token, httponly=True, max_age=60*15)  
+    response.set_cookie("refresh_token", refresh_token, httponly=True, max_age=60*60*24*7)  
+    
+    return response
 
 @auth_router.post("/refresh_token", response_model=Token)
 def refresh_token(request: Request, db: Session = Depends(get_db)):

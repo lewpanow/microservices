@@ -30,12 +30,14 @@ function handleLoginFormSubmit(event) {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const errorMessage = document.getElementById('error-message');
-    errorMessage.textContent = ''; 
+    errorMessage.textContent = '';
+
     fetch('/auth/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
+        credentials: 'include', 
         body: new URLSearchParams({
             username: username,
             password: password,
@@ -50,11 +52,8 @@ function handleLoginFormSubmit(event) {
         return response.json();
     })
     .then(data => {
-        console.log('Login success data:', data);
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token || '');
-        localStorage.setItem('user_id', data.user_id); 
-        console.log('Tokens and user_id saved:', data);
+        document.cookie = `access_token=${data.access_token}; path=/; max-age=${60 * 15}`;
+        document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}`; 
         window.location.href = '/dashboard';
     })
     .catch(error => {
@@ -113,7 +112,7 @@ function handleLoginFormSubmit(event) {
     }
     
     function addAuthHeader(config) {
-        const token = localStorage.getItem('access_token');
+        const token = getCookie('access_token');
         if (token) {
             config.headers = config.headers || {};
             config.headers['Authorization'] = `Bearer ${token}`;
@@ -121,47 +120,56 @@ function handleLoginFormSubmit(event) {
         return config;
     }
 
-function handleLoginFormSubmit(event) {
-    event.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const errorMessage = document.getElementById('error-message');
-    errorMessage.textContent = ''; 
-    fetch('/auth/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            username: username,
-            password: password,
-        }),
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => {
-                throw err;
-            });
+    function handleLoginFormSubmit(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = ''; 
+        fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            credentials: 'include', // Убедитесь, что это установлено
+            body: new URLSearchParams({
+                username: username,
+                password: password,
+            }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw err;
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token || '');
+            localStorage.setItem('user_id', data.user_id); 
+            console.log('Tokens and user_id saved:', data);
+            window.location.href = '/dashboard';
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            if (error.detail && error.detail === "Incorrect username or password") {
+                errorMessage.textContent = "Неверное имя пользователя или пароль.";
+            } else {
+                errorMessage.textContent = "Произошла ошибка. Попробуйте позже.";
+            }
+        });
+    }
+    
+    function addAuthHeader(config) {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Login success data:', data);
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token || '');
-        localStorage.setItem('user_id', data.user_id); 
-        console.log('Tokens and user_id saved:', data);
-        window.location.href = '/dashboard';
-    })
-    .catch(error => {
-        console.error('Login error:', error);
-        if (error.detail && error.detail === "Incorrect username or password") {
-            errorMessage.textContent = "Неверное имя пользователя или пароль.";
-        } else {
-            errorMessage.textContent = "Произошла ошибка. Попробуйте позже.";
-        }
-    });
-}
+        return config;
+    }
 
 function setupLoginForm() {
     const loginForm = document.getElementById('loginForm');
