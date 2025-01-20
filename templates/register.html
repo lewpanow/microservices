@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Регистрация</h1>
+    <form id="registerForm">
+        <input type="text" id="username" placeholder="Имя пользователя" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="full_name" placeholder="Полное имя" required>
+        <input type="password" id="password" placeholder="Пароль" required>
+        <input type="password" id="confirm_password" placeholder="Подтвердите пароль" required>
+        <div id="error-message" style="color: red; margin-top: 10px;"></div>
+        <button type="submit" class="button">Зарегистрироваться</button>
+    </form>
+    <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+</div>
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}
+{% endblock %}

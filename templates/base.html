@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Base{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/js/app.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        {% if request.url.path not in ["/register", "/login"] %}
+            <a href="/dashboard">Главная</a>
+            <form id="logoutForm" action="/auth/logout" method="POST" style="display: inline;">
+                <button type="submit" style="background: none; border: none; color: #EF4444; cursor: pointer; font-size: inherit; font-family: inherit;">
+                    Выйти
+                </button>
+            </form>
+        {% endif %}
+    </div>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userIdElement = document.getElementById('user-id');
+        if (userIdElement) {
+            const userId = localStorage.getItem('user_id'); 
+            if (userId) {
+                userIdElement.textContent = `User ID: ${userId}`;
+            } else {
+                userIdElement.style.display = 'none'; 
+            }
+        }
+    });
+</script>
+</html>

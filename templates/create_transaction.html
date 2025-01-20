@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Создать транзакцию{% endblock %}
+{% block content %}
+<div class="dashboard-header">
+    <h1>Создать транзакцию</h1>
+</div>
+<div class="card">
+    <form id="createTransactionForm">
+        <label for="receiver_id">Получатель:</label>
+        <input type="number" id="receiver_id" name="receiver_id" placeholder="ID получателя" required>
+        <label for="amount">Сумма:</label>
+        <input type="number" id="amount" name="amount" placeholder="Сумма" required step="0.01">
+        <button type="submit" class="button">Отправить</button>
+    </form>
+    <div id="error-message" style="color: red; margin-top: 10px;"></div>
+    <div>
+        <h2>Ваш баланс</h2>
+        <p class="dashboard-balance" id="balance">
+            0.00 ₽
+        </p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const createTransactionForm = document.getElementById('createTransactionForm');
+    if (createTransactionForm) {
+        createTransactionForm.addEventListener('submit', handleCreateTransactionFormSubmit);
+    } else {
+        console.error("Форма с id 'createTransactionForm' не найдена.");
+    }
+    updateBalance();
+});
+
+function addAuthHeader(config) {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        return {
+            ...config,
+            headers: {
+                ...config.headers,
+                'Authorization': `Bearer ${token}`,
+            },
+        };
+    }
+    return config;
+}
+
+async function updateBalance() {
+    try {
+        const balanceResponse = await fetch('/transactions/check_balance', addAuthHeader({
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        }));
+        console.log("Ответ на запрос баланса:", balanceResponse);
+        if (balanceResponse.ok) {
+            const balanceData = await balanceResponse.json();
+            console.log("Данные баланса:", balanceData);
+            const balanceElement = document.getElementById('balance');
+            if (balanceElement) {
+                balanceElement.textContent = `${balanceData.balance} ₽`;
+            } else {
+                console.error("Элемент с id 'balance' не найден.");
+            }
+        } else {
+            console.error("Ошибка при проверке баланса. Статус:", balanceResponse.status);
+        }
+    } catch (error) {
+        console.error("Ошибка при обновлении баланса:", error.message);
+    }
+}
+
+async function handleCreateTransactionFormSubmit(event) {
+    event.preventDefault();
+    const receiverId = document.getElementById('receiver_id').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const errorMessage = document.getElementById('error-message');
+    errorMessage.textContent = ''; 
+    try {
+        const userResponse = await fetch(`/transactions/check_user/${receiverId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        console.log("Проверка существования пользователя:", userResponse);
+        if (!userResponse.ok) {
+            throw new Error(`Не удалось проверить существование пользователя. Статус: ${userResponse.status}`);
+        }
+        const userData = await userResponse.json();
+        console.log("Данные пользователя:", userData); 
+        if (!userData.exists) {
+            throw new Error("Пользователь не существует.");
+        }
+        const balanceResponse = await fetch('/transactions/check_balance', addAuthHeader({
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        }));
+        console.log("Проверка баланса:", balanceResponse);
+        if (!balanceResponse.ok) {
+            throw new Error("Ошибка проверки баланса.");
+        }
+        const balanceData = await balanceResponse.json();
+        console.log("Данные баланса:", balanceData);
+        if (balanceData.balance < amount) {
+            throw new Error("Недостаточно средств для создания транзакции.");
+        }
+        const transactionResponse = await fetch('/transactions/create_transaction', addAuthHeader({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receiver_id: receiverId, amount: amount }),
+        }));
+        console.log("Создание транзакции:", transactionResponse);
+        if (!transactionResponse.ok) {
+            throw new Error("Ошибка при создании транзакции.");
+        }
+        const transactionData = await transactionResponse.json();
+        console.log("Данные транзакции:", transactionData);
+        
+        updateBalance();
+
+        alert('Транзакция успешно создана!');
+    } catch (error) {
+        errorMessage.textContent = error.message;
+        console.error("Ошибка:", error.message);
+    }
+}
+</script>
+{% endblock %}

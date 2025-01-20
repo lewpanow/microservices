@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Транзакции{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Транзакции</h1>
+    <div class="dashboard-actions">
+        <a href="/transactions/create_transaction" class="button button-secondary">Создать транзакцию</a>
+    </div>
+</div>
+
+<div class="card">
+    <table class="transactions-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Отправитель</th>
+                <th>Получатель</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if transactions %}
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.timestamp }}</td>
+                        <td>{{ transaction.amount }} ₽</td>
+                        <td>{{ transaction.sender.username }}</td>
+                        <td>{{ transaction.receiver.username }}</td>
+                        <td class="status-{{ transaction.status }}">{{ transaction.status }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">Нет транзакций</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+<script src="/static/js/app.js"></script>
+{% endblock %}

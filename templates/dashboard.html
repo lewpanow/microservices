@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-header">
+    <h1>Главная</h1>
+    <div class="dashboard-actions">
+        <a href="/transactions" class="button">Посмотреть транзакции</a>
+        <a href="/transactions/create_transaction" class="button button-secondary">Создать транзакцию</a>
+    </div>
+</div>
+<div class="card">
+    <h2>Ваш баланс</h2>
+    <p class="dashboard-balance" id="balance">
+        {{ balance }} <span>₽</span>
+    </p>
+</div>
+
+<script src="/static/js/app.js"></script>
+{% endblock %}

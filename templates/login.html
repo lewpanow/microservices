@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Вход</h1>
+    <form id="loginForm">
+        <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
+        <input type="password" id="password" name="password" placeholder="Пароль" required>
+        <div id="error-message" style="color: red; margin-top: 10px;"></div>
+        <button type="submit" class="button">Войти</button>
+    </form>
+    <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+</div>
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}
+{% endblock %}
